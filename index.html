@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>고객 정보 등록</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- 다음 우편번호 서비스 스크립트 (https 프로토콜 명시) -->
+    <script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            /* 헤더 높이만큼 상단에 여백을 주어 내용이 가려지지 않게 함 */
+            padding-top: 64px; 
+        }
+        .custom-magenta-bg { background-color: #E6007E; }
+        .custom-magenta-bg:hover { background-color: #B80065; }
+        .custom-magenta-text { color: #E6007E; }
+        .custom-light-magenta-bg { background-color: #FCE6F2; }
+    </style>
+</head>
+<body class="bg-gray-50">
+
+    <!-- 상단 고정 헤더 -->
+    <header class="fixed top-0 left-0 w-full bg-white shadow-md z-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- 로고 (왼쪽) -->
+                <div class="flex-shrink-0">
+                    <!-- Location Icon SVG -->
+                    <svg class="h-8 w-8 custom-magenta-text" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                </div>
+                <!-- 햄버거 메뉴 버튼 (오른쪽) -->
+                <div>
+                    <button id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-pink-500">
+                        <span class="sr-only">Open main menu</span>
+                        <!-- Icon when menu is closed -->
+                        <svg id="menu-closed-icon" class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                        <!-- Icon when menu is open -->
+                        <svg id="menu-open-icon" class="hidden h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- 모바일 메뉴 (클릭 시 표시) -->
+        <div id="mobile-menu" class="hidden border-t">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="https://www.lguplus.com/footer/agreement" target="_blank" class="text-gray-600 hover:bg-gray-100 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium">이용약관</a>
+                <a href="https://privacy.lguplus.com/privacy/info/v1/1" target="_blank" class="text-gray-600 hover:bg-gray-100 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium">개인정보 처리방침</a>
+                <a href="https://privacy.lguplus.com/privacy/main" target="_blank" class="text-gray-600 hover:bg-gray-100 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium">프라이버시센터</a>
+                <a href="https://www.lguplus.com/footer/personal-information/communication-data" target="_blank" class="text-gray-600 hover:bg-gray-100 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium">통신자료 제공사실 열람</a>
+                <a href="https://www.lguplus.com/support/service/user-protection-guide" target="_blank" class="text-gray-600 hover:bg-gray-100 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium">이용자피해 예방가이드</a>
+                <a href="https://www.msafer.or.kr/index.do" target="_blank" class="text-gray-600 hover:bg-gray-100 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium">명의도용방지서비스</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- 메인 컨텐츠 -->
+    <main>
+        <div class="flex items-center justify-center min-h-screen py-12 px-4 sm:px-6 lg:px-8">
+            <div class="w-full max-w-lg p-10 space-y-6 bg-white rounded-xl shadow-lg">
+                <div class="text-center">
+                    <h1 class="text-2xl font-bold text-gray-900">고객 정보 등록</h1>
+                </div>
+                <form id="customer-form" class="mt-8 space-y-6">
+                        <div>
+                            <label for="name" class="text-sm font-medium text-gray-700">가입자 이름</label>
+                            <input id="name" name="name" type="text" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm" placeholder="이름 입력">
+                        </div>
+                        <div>
+                            <label for="phone" class="text-sm font-medium text-gray-700">가입자 연락처</label>
+                            <input id="phone" name="phone" type="tel" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm" placeholder="'-' 없이 숫자만 입력">
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium text-gray-700">주민등록번호</label>
+                            <div class="flex items-center space-x-2 mt-1">
+                                <input id="resident-number1" name="resident-number1" type="text" maxlength="6" required class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm" placeholder="앞 6자리">
+                                <span class="text-gray-500">-</span>
+                                <input id="resident-number2" name="resident-number2" type="password" maxlength="7" required class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm" placeholder="뒤 7자리">
+                            </div>
+                        </div>
+                        <div>
+                            <label for="email" class="text-sm font-medium text-gray-700">이메일</label>
+                            <input id="email" name="email" type="email" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm" placeholder="이메일을 입력해 주세요">
+                        </div>
+                        <div>
+                            <label for="address-search" class="text-sm font-medium text-gray-700">설치 주소</label>
+                            <button type="button" id="address-search" class="mt-1 w-full text-left px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-500 bg-white hover:bg-gray-50 flex justify-between items-center">
+                                <span id="address-label">주소를 검색해주세요</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                            <input type="hidden" id="address" name="address" required>
+                            <div id="address-details" class="mt-2 space-y-2 hidden">
+                                 <input type="text" id="selected-address" readonly class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100 focus:outline-none sm:text-sm">
+                                 <input type="text" id="detail-address" name="detail-address" placeholder="상세 주소를 입력하세요" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm">
+                            </div>
+                        </div>
+                        
+                        <!-- 결제 방식 -->
+                        <div>
+                            <label class="text-sm font-medium text-gray-700">결제 방식</label>
+                            <fieldset class="mt-2">
+                                <div class="flex items-center space-x-4">
+                                    <div class="flex items-center">
+                                        <input id="payment-bank" name="payment-method" type="radio" value="계좌(자동이체)" checked class="h-4 w-4 text-pink-600 border-gray-300 focus:ring-pink-500">
+                                        <label for="payment-bank" class="ml-2 block text-sm text-gray-900">계좌(자동이체)</label>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <input id="payment-card" name="payment-method" type="radio" value="카드" class="h-4 w-4 text-pink-600 border-gray-300 focus:ring-pink-500">
+                                        <label for="payment-card" class="ml-2 block text-sm text-gray-900">카드</label>
+                                    </div>
+                                </div>
+                            </fieldset>
+                        </div>
+        
+                        <!-- 계좌 정보 (사은품 수령 정보) -->
+                        <div id="bank-info-section">
+                                <h3 class="text-sm font-medium text-gray-700">사은품 수령 정보</h3>
+                                <select id="bank-name" name="bank-name" required class="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm">
+                                    <option value="">은행을 선택해 주세요.</option>
+                                    <option value="국민은행">국민은행</option>
+                                    <option value="신한은행">신한은행</option>
+                                    <option value="농협">농협</option>
+                                    <option value="우리은행">우리은행</option>
+                                    <option value="카카오뱅크">카카오뱅크</option>
+                                    <option value="KEB하나">KEB하나</option>
+                                    <option value="기업은행">기업은행</option>
+                                    <option value="토스뱅크">토스뱅크</option>
+                                    <option value="새마을금고">새마을금고</option>
+                                    <option value="대구은행">대구은행</option>
+                                    <option value="부산은행">부산은행</option>
+                                    <option value="케이뱅크">케이뱅크</option>
+                                    <option value="우체국">우체국</option>
+                                    <option value="SC제일은행">SC제일은행</option>
+                                    <option value="경남은행">경남은행</option>
+                                    <option value="광주은행">광주은행</option>
+                                    <option value="신협">신협</option>
+                                    <option value="KEB하나(구.외환)">KEB하나(구.외환)</option>
+                                    <option value="전북은행">전북은행</option>
+                                    <option value="씨티은행">씨티은행</option>
+                                    <option value="수협">수협</option>
+                                    <option value="저축은행">저축은행</option>
+                                    <option value="신한금융투자(신한증권)">신한금융투자(신한증권)</option>
+                                    <option value="산업은행">산업은행</option>
+                                    <option value="축협">축협</option>
+                                    <option value="산림조합">산림조합</option>
+                                    <option value="동양증권(유안타)">동양증권(유안타)</option>
+                                    <option value="제주은행">제주은행</option>
+                                    <option value="조흥은행">조흥은행</option>
+                                    <option value="KB증권">KB증권</option>
+                                    <option value="한국투자증권">한국투자증권</option>
+                                    <option value="대구증권">대구증권</option>
+                                    <option value="하이투자증권">하이투자증권</option>
+                                    <option value="미래에셋">미래에셋</option>
+                                    <option value="우리투자증권">우리투자증권</option>
+                                    <option value="삼성증권">삼성증권</option>
+                                    <option value="교보증권">교보증권</option>
+                                    <option value="미래에셋대우">미래에셋대우</option>
+                                    <option value="부국증권">부국증권</option>
+                                    <option value="솔로몬투자증권">솔로몬투자증권</option>
+                                    <option value="NH투자증권">NH투자증권</option>
+                                    <option value="유진투자증권">유진투자증권</option>
+                                    <option value="키움증권">키움증권</option>
+                                    <option value="하나금융투자">하나금융투자</option>
+                                    <option value="DB금융투자">DB금융투자</option>
+                                    <option value="카카오페이증권">카카오페이증권</option>
+                                    <option value="이베스트증권">이베스트증권</option>
+                                </select>
+                                <input id="bank-account" name="bank-account" type="text" required class="mt-2 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm" placeholder="가입자 명의 계좌번호">
+                                 <div class="mt-4 custom-light-magenta-bg p-3 rounded-md text-center text-sm custom-magenta-text">
+                                    <p>사은품 받는 계좌와 동일한 계좌가 등록돼요.</p>
+                                </div>
+                        </div>
+                        
+                        <!-- 카드 정보 -->
+                        <div id="card-info-section" class="hidden space-y-4">
+                                <div>
+                                    <label for="card-company" class="text-sm font-medium text-gray-700">카드사</label>
+                                     <select id="card-company" name="card-company" class="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm">
+                                        <option value="">가입자 명의의 카드사</option>
+                                        <option value="현대카드">현대카드</option>
+                                        <option value="국민카드">국민카드</option>
+                                        <option value="삼성카드">삼성카드</option>
+                                        <option value="신한카드">신한카드</option>
+                                        <option value="하나카드">하나카드</option>
+                                        <option value="롯데카드">롯데카드</option>
+                                        <option value="BC카드">BC카드</option>
+                                        <option value="우리카드">우리카드</option>
+                                        <option value="농협카드">농협카드</option>
+                                        <option value="카카오뱅크카드">카카오뱅크카드</option>
+                                        <option value="씨티카드">씨티카드</option>
+                                        <option value="외환카드">외환카드</option>
+                                        <option value="제주카드">제주카드</option>
+                                        <option value="수협카드">수협카드</option>
+                                        <option value="광주카드">광주카드</option>
+                                        <option value="전북카드">전북카드</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="card-number" class="text-sm font-medium text-gray-700">카드번호</label>
+                                    <input id="card-number" name="card-number" type="text" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm" placeholder="카드번호">
+                                </div>
+                                <div>
+                                    <label for="card-validation" class="text-sm font-medium text-gray-700">유효기간</label>
+                                    <input id="card-validation" name="card-validation" type="text" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm" placeholder="MMYY">
+                                </div>
+                        </div>
+        
+                        <div>
+                            <button type="submit" class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white custom-magenta-bg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500">
+                                등록하기
+                            </button>
+                        </div>
+                </form>
+            </div>
+        </div>
+    </main>
+    
+    <!-- 하단 푸터 -->
+    <footer class="bg-white border-t mt-12">
+        <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 text-xs text-gray-500">
+            <div class="flex justify-between items-center mb-6">
+                 <p class="text-sm font-bold">고객센터</p>
+                 <div class="flex space-x-2">
+                     <button class="px-4 py-1.5 border rounded-md text-sm">ENG</button>
+                     <button class="px-4 py-1.5 border rounded-md text-sm">Family Site</button>
+                 </div>
+            </div>
+            <p class="mb-4">
+                휴대폰: 국번 없이 114(무료) 또는 080-011-6000(무료), 국번 없이 1599-0011(유료) <br>
+                인터넷/접전화: 080-816-2000(무료) 또는 1600-2000(유료) T 멤버십 마켓: 1670-9830(유료)
+            </p>
+            <div class="border-t pt-4">
+                <p class="font-bold mb-2">SK텔레콤㈜</p>
+                <p>대표이사/사장: 유영상 <span class="mx-2">|</span> 사업자등록번호: 104-81-37225 <span class="mx-2">|</span> 통신판매번호: 2004-서울중구-2923 <a href="#" class="underline">사업자 정보 확인</a></p>
+                <p>서울특별시 중구 을지로 65(을지로2가)</p>
+                <p>전자우편주소: tworld.cs@sktelecom.com</p>
+                <p>호스팅 사업자 Amazon Web Service(AWS)</p>
+                <p class="mt-4">COPYRIGHT © SK TELECOM CO., LTD. ALL RIGHTS RESERVED.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 알림용 모달 -->
+    <div id="notification-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center hidden">
+        <div class="relative mx-auto p-5 border w-full max-w-sm shadow-lg rounded-md bg-white">
+            <div class="mt-3 text-center">
+                <p id="notification-message" class="text-base leading-6 font-medium text-gray-900 mb-4"></p>
+                <button id="notification-close" class="px-4 py-2 custom-magenta-bg text-white text-base font-medium rounded-md w-full shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-500">
+                    확인
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 모바일 메뉴 토글 로직 ---
+        const menuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const menuClosedIcon = document.getElementById('menu-closed-icon');
+        const menuOpenIcon = document.getElementById('menu-open-icon');
+
+        menuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+            menuClosedIcon.classList.toggle('hidden');
+            menuOpenIcon.classList.toggle('hidden');
+        });
+
+        // --- 요소 가져오기 ---
+        const paymentBankRadio = document.getElementById('payment-bank');
+        const paymentCardRadio = document.getElementById('payment-card');
+        const bankInfoSection = document.getElementById('bank-info-section');
+        const cardInfoSection = document.getElementById('card-info-section');
+        
+        const bankNameInput = document.getElementById('bank-name');
+        const bankAccountInput = document.getElementById('bank-account');
+        const cardCompanyInput = document.getElementById('card-company');
+        const cardNumberInput = document.getElementById('card-number');
+        const cardValidationInput = document.getElementById('card-validation');
+
+        // --- 결제 방식 선택 로직 ---
+        function togglePaymentMethod() {
+            if (paymentCardRadio.checked) {
+                bankInfoSection.classList.add('hidden');
+                cardInfoSection.classList.remove('hidden');
+                bankNameInput.required = false;
+                bankAccountInput.required = false;
+                cardCompanyInput.required = true;
+                cardNumberInput.required = true;
+                cardValidationInput.required = true;
+            } else {
+                bankInfoSection.classList.remove('hidden');
+                cardInfoSection.classList.add('hidden');
+                bankNameInput.required = true;
+                bankAccountInput.required = true;
+                cardCompanyInput.required = false;
+                cardNumberInput.required = false;
+                cardValidationInput.required = false;
+            }
+        }
+        paymentBankRadio.addEventListener('change', togglePaymentMethod);
+        paymentCardRadio.addEventListener('change', togglePaymentMethod);
+
+
+        // --- 알림 모달 로직 ---
+        const notificationModal = document.getElementById('notification-modal');
+        const notificationMessage = document.getElementById('notification-message');
+        const notificationClose = document.getElementById('notification-close');
+
+        function showMessage(message) {
+            notificationMessage.textContent = message;
+            notificationModal.classList.remove('hidden');
+        }
+
+        notificationClose.addEventListener('click', () => {
+            notificationModal.classList.add('hidden');
+        });
+
+
+        // --- 주소 검색 로직 (팝업 방식) ---
+        document.getElementById('address-search').addEventListener('click', function() {
+            new daum.Postcode({
+                oncomplete: function(data) {
+                    let addr = '';
+                    if (data.userSelectedType === 'R') {
+                        addr = data.roadAddress;
+                    } else {
+                        addr = data.jibunAddress;
+                    }
+                    document.getElementById('selected-address').value = `(${data.zonecode}) ${addr}`;
+                    document.getElementById('address-details').classList.remove('hidden');
+                    document.getElementById('detail-address').focus();
+                    document.getElementById('address-label').textContent = '주소 변경';
+                    document.getElementById('address-label').classList.remove('text-gray-500');
+                    document.getElementById('address-label').classList.add('text-gray-900');
+                }
+            }).open();
+        });
+
+
+        // --- 폼 제출 로직 ---
+        const form = document.getElementById('customer-form');
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const mainAddress = document.getElementById('selected-address').value;
+            const detailAddress = document.getElementById('detail-address').value;
+            if (mainAddress) {
+                document.getElementById('address').value = mainAddress + ' ' + detailAddress;
+            } else {
+                showMessage('설치 주소를 검색해주세요.');
+                return;
+            }
+
+            const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzIRlU6pLiUt4DvWVAKB5IPgSfhkv7mf-QTOcZNtqTNfducjq3GcIygjIDEAzYsEHHb/exec';
+
+            const formData = new FormData(form);
+            const data = {};
+            formData.forEach((value, key) => {
+                data[key] = value;
+            });
+            
+            const submitButton = form.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            submitButton.textContent = '등록 중...';
+
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                cache: 'no-cache',
+                headers: { 'Content-Type': 'application/json', },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                showMessage('성공적으로 등록되었습니다!');
+                form.reset();
+                document.getElementById('address-details').classList.add('hidden');
+                document.getElementById('address-label').textContent = '주소를 검색해주세요';
+                document.getElementById('address-label').classList.add('text-gray-500');
+                document.getElementById('address-label').classList.remove('text-gray-900');
+                togglePaymentMethod(); // 폼 리셋 후 결제 방식도 초기화
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showMessage('등록 중 오류가 발생했습니다. 다시 시도해주세요.');
+            })
+            .finally(() => {
+                submitButton.disabled = false;
+                submitButton.textContent = '등록하기';
+            });
+        });
+        
+        // 페이지 로드 시 초기 결제 방식 설정
+        togglePaymentMethod();
+    </script>
+</body>
+</html>
+
